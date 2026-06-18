@@ -1,1053 +1,320 @@
-html
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>VyxelYT – Minecraft Creator</title>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-<style>
-  /* ===== RESET & ROOT ===== */
-  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-  :root {
-    --neon: #00b4ff;
-    --neon2: #0066ff;
-    --neon3: #00eaff;
-    --dark: #050a12;
-    --dark2: #080f1c;
-    --dark3: #0d1a2e;
-    --card: rgba(8,20,40,0.7);
-    --glass: rgba(0,180,255,0.06);
-    --border: rgba(0,180,255,0.18);
-    --text: #c8e0ff;
-    --white: #e8f4ff;
-    --font-head: 'Orbitron', monospace;
-    --font-body: 'Rajdhani', sans-serif;
-  }
-  html { scroll-behavior: smooth; }
-  body {
-    background: var(--dark);
-    color: var(--text);
-    font-family: var(--font-body);
-    font-size: 16px;
-    overflow-x: hidden;
-    cursor: none;
-  }
-
-  /* ===== CUSTOM CURSOR ===== */
-  #cursor {
-    position: fixed; width: 18px; height: 18px; border-radius: 50%;
-    background: var(--neon); mix-blend-mode: screen;
-    pointer-events: none; z-index: 9999;
-    transform: translate(-50%, -50%);
-    transition: width .15s, height .15s, background .15s;
-    box-shadow: 0 0 12px var(--neon), 0 0 30px var(--neon2);
-  }
-  #cursor-trail {
-    position: fixed; width: 36px; height: 36px; border-radius: 50%;
-    border: 1.5px solid var(--neon3); pointer-events: none; z-index: 9998;
-    transform: translate(-50%, -50%);
-    transition: left .12s ease, top .12s ease, opacity .3s;
-    opacity: 0.5;
-  }
-  body:hover #cursor { opacity: 1; }
-
-  /* ===== LOADER ===== */
-  #loader {
-    position: fixed; inset: 0; background: var(--dark); z-index: 10000;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    transition: opacity .6s ease, visibility .6s;
-  }
-  #loader.hide { opacity: 0; visibility: hidden; }
-  .loader-logo {
-    font-family: var(--font-head); font-size: 2.4rem; font-weight: 900;
-    color: var(--neon); letter-spacing: 8px;
-    text-shadow: 0 0 30px var(--neon), 0 0 60px var(--neon2);
-    animation: pulse-glow 1s ease-in-out infinite alternate;
-  }
-  .loader-bar-wrap {
-    margin-top: 30px; width: 240px; height: 3px;
-    background: rgba(0,180,255,0.15); border-radius: 10px; overflow: hidden;
-  }
-  .loader-bar {
-    height: 100%; width: 0; border-radius: 10px;
-    background: linear-gradient(90deg, var(--neon2), var(--neon3));
-    box-shadow: 0 0 16px var(--neon);
-    animation: load-fill 1.8s ease forwards;
-  }
-  @keyframes load-fill { to { width: 100%; } }
-
-  /* ===== SCROLL PROGRESS ===== */
-  #scroll-bar {
-    position: fixed; top: 0; left: 0; height: 3px; width: 0%;
-    background: linear-gradient(90deg, var(--neon2), var(--neon3));
-    z-index: 9000; box-shadow: 0 0 10px var(--neon);
-    transition: width .1s;
-  }
-
-  /* ===== PARTICLES CANVAS ===== */
-  #particles { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
-
-  /* ===== NAV ===== */
-  nav {
-    position: fixed; top: 0; width: 100%; z-index: 1000;
-    padding: 18px 5vw;
-    display: flex; align-items: center; justify-content: space-between;
-    background: rgba(5,10,18,0.6);
-    backdrop-filter: blur(14px);
-    border-bottom: 1px solid var(--border);
-  }
-  .nav-logo {
-    font-family: var(--font-head); font-size: 1.3rem; font-weight: 900;
-    color: var(--neon); letter-spacing: 4px;
-    text-shadow: 0 0 20px var(--neon);
-  }
-  .nav-links { display: flex; gap: 32px; list-style: none; }
-  .nav-links a {
-    color: var(--text); text-decoration: none; font-family: var(--font-body);
-    font-size: 0.95rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase;
-    transition: color .25s, text-shadow .25s;
-    position: relative;
-  }
-  .nav-links a::after {
-    content: ''; position: absolute; bottom: -4px; left: 0;
-    width: 0; height: 1.5px; background: var(--neon);
-    transition: width .3s ease;
-  }
-  .nav-links a:hover { color: var(--neon); text-shadow: 0 0 12px var(--neon); }
-  .nav-links a:hover::after { width: 100%; }
-  .nav-burger { display: none; flex-direction: column; gap: 5px; cursor: pointer; }
-  .nav-burger span { width: 24px; height: 2px; background: var(--neon); border-radius: 2px; transition: .3s; }
-
-  /* ===== SECTION BASE ===== */
-  section { position: relative; z-index: 1; padding: 100px 8vw; }
-  .section-tag {
-    font-family: var(--font-head); font-size: 0.7rem; letter-spacing: 5px;
-    color: var(--neon); text-transform: uppercase; margin-bottom: 12px;
-    opacity: 0.8;
-  }
-  .section-title {
-    font-family: var(--font-head); font-size: clamp(1.8rem, 4vw, 3rem);
-    font-weight: 900; color: var(--white);
-    text-shadow: 0 0 40px rgba(0,180,255,0.3);
-    line-height: 1.15; margin-bottom: 20px;
-  }
-  .section-title span { color: var(--neon); text-shadow: 0 0 20px var(--neon); }
-
-  /* ===== HERO ===== */
-  #hero {
-    min-height: 100vh; display: flex; align-items: center;
-    padding: 0 8vw; gap: 60px;
-    background: radial-gradient(ellipse 80% 60% at 60% 50%, rgba(0,80,200,0.12) 0%, transparent 70%);
-  }
-  .hero-text { flex: 1; }
-  .hero-eyebrow {
-    font-family: var(--font-head); font-size: 0.72rem; letter-spacing: 6px;
-    color: var(--neon3); text-transform: uppercase; margin-bottom: 18px;
-    animation: fadeUp .8s ease both;
-  }
-  .hero-name {
-    font-family: var(--font-head); font-size: clamp(2.8rem, 7vw, 5.5rem);
-    font-weight: 900; line-height: 1;
-    background: linear-gradient(135deg, #fff 30%, var(--neon3) 70%, var(--neon) 100%);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    background-clip: text;
-    filter: drop-shadow(0 0 30px rgba(0,180,255,0.5));
-    animation: fadeUp .8s .15s ease both;
-  }
-  .hero-sub {
-    font-size: 1.3rem; font-weight: 500; color: var(--text);
-    letter-spacing: 3px; text-transform: uppercase;
-    margin: 14px 0 40px;
-    animation: fadeUp .8s .3s ease both;
-  }
-  .hero-btns {
-    display: flex; gap: 18px; flex-wrap: wrap;
-    animation: fadeUp .8s .45s ease both;
-  }
-  .btn {
-    font-family: var(--font-head); font-size: 0.78rem; font-weight: 700;
-    letter-spacing: 3px; text-transform: uppercase; padding: 14px 34px;
-    border-radius: 4px; border: none; cursor: pointer;
-    text-decoration: none; display: inline-block;
-    transition: all .3s ease;
-  }
-  .btn-primary {
-    background: linear-gradient(135deg, var(--neon2), var(--neon3));
-    color: #fff;
-    box-shadow: 0 0 24px rgba(0,100,255,0.5), 0 0 60px rgba(0,180,255,0.15);
-  }
-  .btn-primary:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 0 40px rgba(0,180,255,0.8), 0 0 80px rgba(0,100,255,0.3);
-  }
-  .btn-outline {
-    background: transparent; color: var(--neon);
-    border: 1.5px solid var(--neon);
-    box-shadow: inset 0 0 0 0 var(--neon);
-  }
-  .btn-outline:hover {
-    background: rgba(0,180,255,0.1);
-    transform: translateY(-3px);
-    box-shadow: 0 0 30px rgba(0,180,255,0.4);
-  }
-
-  /* ===== SKIN DISPLAY ===== */
-  .hero-skin {
-    flex: 0 0 auto; display: flex; align-items: center; justify-content: center;
-    position: relative; animation: fadeUp .8s .2s ease both;
-  }
-  .skin-glow-ring {
-    position: absolute;
-    width: 320px; height: 320px; border-radius: 50%;
-    background: radial-gradient(circle, rgba(0,100,255,0.18) 0%, transparent 70%);
-    animation: spin-slow 8s linear infinite;
-  }
-  .skin-glow-ring::before, .skin-glow-ring::after {
-    content: ''; position: absolute; inset: 0; border-radius: 50%;
-  }
-  .skin-glow-ring::before {
-    border: 1.5px solid rgba(0,180,255,0.3);
-    animation: spin-slow 6s linear infinite reverse;
-  }
-  .skin-glow-ring::after {
-    border: 1px dashed rgba(0,100,255,0.2);
-    inset: 20px;
-    animation: spin-slow 10s linear infinite;
-  }
-  .skin-orb {
-    position: absolute; width: 260px; height: 260px; border-radius: 50%;
-    background: radial-gradient(circle at 40% 40%, rgba(0,180,255,0.22), rgba(0,50,180,0.1) 60%, transparent);
-    filter: blur(20px);
-    animation: pulse-glow 3s ease-in-out infinite alternate;
-  }
-  .skin-img {
-    position: relative; z-index: 2;
-    width: 220px; height: auto;
-    image-rendering: pixelated;
-    filter: drop-shadow(0 0 20px rgba(0,180,255,0.7)) drop-shadow(0 0 60px rgba(0,100,255,0.4));
-    animation: float 4s ease-in-out infinite;
-  }
-  .skin-scanline {
-    position: absolute; z-index: 3; width: 240px; height: 320px;
-    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,180,255,0.02) 2px, rgba(0,180,255,0.02) 4px);
-    pointer-events: none; border-radius: 8px;
-  }
-  /* Animated outline segments */
-  .skin-corner {
-    position: absolute; z-index: 4; width: 30px; height: 30px;
-  }
-  .skin-corner.tl { top: 30px; left: 50%; transform: translateX(-120px); border-top: 2px solid var(--neon3); border-left: 2px solid var(--neon3); }
-  .skin-corner.tr { top: 30px; right: 50%; transform: translateX(120px); border-top: 2px solid var(--neon3); border-right: 2px solid var(--neon3); }
-  .skin-corner.bl { bottom: 10px; left: 50%; transform: translateX(-120px); border-bottom: 2px solid var(--neon3); border-left: 2px solid var(--neon3); }
-  .skin-corner.br { bottom: 10px; right: 50%; transform: translateX(120px); border-bottom: 2px solid var(--neon3); border-right: 2px solid var(--neon3); }
-
-  @keyframes float {
-    0%, 100% { transform: translateY(0) rotate(-1deg); }
-    50% { transform: translateY(-18px) rotate(1deg); }
-  }
-  @keyframes spin-slow { to { transform: rotate(360deg); } }
-  @keyframes pulse-glow {
-    from { opacity: 0.6; filter: blur(18px); }
-    to { opacity: 1; filter: blur(24px); }
-  }
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(28px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  /* ===== DIVIDER ===== */
-  .divider {
-    width: 100%; height: 1px;
-    background: linear-gradient(90deg, transparent, var(--neon), var(--neon2), transparent);
-    opacity: 0.3; margin: 0;
-  }
-
-  /* ===== ABOUT ===== */
-  #about { background: linear-gradient(180deg, transparent, rgba(0,40,100,0.08), transparent); }
-  .about-grid {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center;
-    margin-top: 40px;
-  }
-  .about-text p {
-    font-size: 1.1rem; line-height: 1.8; color: var(--text);
-    margin-bottom: 16px; font-weight: 400;
-  }
-  .about-text p strong { color: var(--neon); font-weight: 600; }
-  .about-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-  .stat-card {
-    background: var(--card); border: 1px solid var(--border);
-    border-radius: 10px; padding: 24px 20px;
-    text-align: center; backdrop-filter: blur(10px);
-    transition: border-color .3s, box-shadow .3s, transform .3s;
-    position: relative; overflow: hidden;
-  }
-  .stat-card::before {
-    content: ''; position: absolute; inset: 0;
-    background: linear-gradient(135deg, rgba(0,180,255,0.06), transparent);
-    opacity: 0; transition: opacity .3s;
-  }
-  .stat-card:hover {
-    border-color: var(--neon); transform: translateY(-4px);
-    box-shadow: 0 0 30px rgba(0,180,255,0.2);
-  }
-  .stat-card:hover::before { opacity: 1; }
-  .stat-num {
-    font-family: var(--font-head); font-size: 2.2rem; font-weight: 900;
-    color: var(--neon); line-height: 1;
-    text-shadow: 0 0 20px var(--neon);
-  }
-  .stat-label { font-size: 0.85rem; color: var(--text); letter-spacing: 2px; margin-top: 6px; text-transform: uppercase; }
-
-  /* ===== CONTENT CARDS ===== */
-  #content { background: linear-gradient(180deg, transparent, rgba(0,20,60,0.12), transparent); }
-  .cards-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 50px; }
-  .content-card {
-    background: var(--card); border: 1px solid var(--border);
-    border-radius: 12px; padding: 32px 28px; backdrop-filter: blur(12px);
-    transition: all .35s ease; position: relative; overflow: hidden;
-    cursor: default;
-  }
-  .content-card::before {
-    content: ''; position: absolute; top: -50%; left: -50%;
-    width: 200%; height: 200%;
-    background: conic-gradient(transparent 0deg, rgba(0,180,255,0.06) 60deg, transparent 120deg);
-    animation: card-spin 6s linear infinite; opacity: 0; transition: opacity .3s;
-  }
-  .content-card:hover::before { opacity: 1; }
-  @keyframes card-spin { to { transform: rotate(360deg); } }
-  .content-card:hover {
-    border-color: var(--neon); transform: translateY(-8px);
-    box-shadow: 0 20px 60px rgba(0,100,255,0.18), 0 0 30px rgba(0,180,255,0.12);
-  }
-  .card-icon {
-    font-size: 2.5rem; margin-bottom: 20px;
-    filter: drop-shadow(0 0 10px var(--neon));
-  }
-  .card-title {
-    font-family: var(--font-head); font-size: 1rem; font-weight: 700;
-    color: var(--white); letter-spacing: 2px; margin-bottom: 12px;
-  }
-  .card-desc { font-size: 1rem; line-height: 1.7; color: rgba(200,224,255,0.75); }
-  .card-tag {
-    display: inline-block; margin-top: 18px;
-    background: rgba(0,180,255,0.1); border: 1px solid rgba(0,180,255,0.3);
-    color: var(--neon); font-size: 0.72rem; letter-spacing: 2px;
-    padding: 5px 14px; border-radius: 30px; text-transform: uppercase; font-family: var(--font-head);
-  }
-
-  /* ===== COMMUNITY ===== */
-  #community { text-align: center; }
-  .community-grid {
-    display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; margin-top: 50px;
-  }
-  .comm-btn {
-    display: flex; align-items: center; gap: 12px;
-    padding: 18px 36px; border-radius: 8px;
-    font-family: var(--font-head); font-size: 0.82rem; font-weight: 700; letter-spacing: 3px;
-    text-transform: uppercase; text-decoration: none;
-    border: 1.5px solid; transition: all .35s;
-    cursor: pointer; background: transparent;
-  }
-  .comm-btn svg { width: 22px; height: 22px; }
-  .comm-btn.discord { color: #7289da; border-color: #7289da; }
-  .comm-btn.discord:hover { background: rgba(114,137,218,0.12); box-shadow: 0 0 30px rgba(114,137,218,0.3); transform: translateY(-4px); }
-  .comm-btn.youtube { color: #ff3030; border-color: #ff3030; }
-  .comm-btn.youtube:hover { background: rgba(255,48,48,0.12); box-shadow: 0 0 30px rgba(255,48,48,0.3); transform: translateY(-4px); }
-  .comm-btn.twitter { color: var(--neon3); border-color: var(--neon3); }
-  .comm-btn.twitter:hover { background: rgba(0,234,255,0.08); box-shadow: 0 0 30px rgba(0,234,255,0.25); transform: translateY(-4px); }
-  .comm-desc { max-width: 600px; margin: 0 auto 40px; font-size: 1.1rem; line-height: 1.8; color: var(--text); }
-
-  /* ===== CONTACT ===== */
-  #contact { background: linear-gradient(180deg, transparent, rgba(0,40,100,0.1), transparent); }
-  .contact-wrap { max-width: 680px; margin: 50px auto 0; }
-  .form-row { margin-bottom: 22px; }
-  .form-row label {
-    display: block; font-family: var(--font-head); font-size: 0.7rem;
-    letter-spacing: 3px; color: var(--neon); margin-bottom: 8px; text-transform: uppercase;
-  }
-  .form-row input, .form-row textarea {
-    width: 100%; background: var(--card); border: 1px solid var(--border);
-    color: var(--white); font-family: var(--font-body); font-size: 1rem;
-    padding: 14px 18px; border-radius: 6px; outline: none;
-    transition: border-color .3s, box-shadow .3s;
-    backdrop-filter: blur(10px);
-  }
-  .form-row textarea { height: 130px; resize: vertical; }
-  .form-row input:focus, .form-row textarea:focus {
-    border-color: var(--neon);
-    box-shadow: 0 0 20px rgba(0,180,255,0.18), inset 0 0 10px rgba(0,180,255,0.05);
-  }
-  .form-status {
-    margin-top: 14px; font-family: var(--font-head); font-size: 0.8rem; letter-spacing: 2px;
-    text-align: center; min-height: 24px; transition: color .3s;
-  }
-  .form-status.ok { color: #00ff99; text-shadow: 0 0 10px #00ff99; }
-  .form-status.err { color: #ff4444; }
-
-  /* ===== MINI GAME ===== */
-  #game-section {
-    padding: 80px 8vw; text-align: center;
-    background: linear-gradient(180deg, transparent, rgba(0,20,80,0.15), transparent);
-  }
-  .game-wrap {
-    max-width: 700px; margin: 50px auto 0;
-    background: rgba(4,10,24,0.8); border: 1px solid var(--border);
-    border-radius: 16px; overflow: hidden; backdrop-filter: blur(14px);
-    box-shadow: 0 0 60px rgba(0,100,255,0.1);
-  }
-  .game-header {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 16px 24px;
-    background: rgba(0,180,255,0.04); border-bottom: 1px solid var(--border);
-  }
-  .game-title-sm { font-family: var(--font-head); font-size: 0.85rem; letter-spacing: 3px; color: var(--neon); }
-  .game-score { font-family: var(--font-head); font-size: 1rem; color: var(--white); }
-  .game-score span { color: var(--neon); }
-  #gameCanvas {
-    display: block; width: 100%; height: auto;
-    image-rendering: pixelated;
-  }
-  .game-controls {
-    padding: 16px 24px; display: flex; gap: 14px; justify-content: center; align-items: center;
-    border-top: 1px solid var(--border);
-  }
-  .game-instruction { font-size: 0.9rem; color: var(--text); letter-spacing: 1px; }
-  #startBtn {
-    font-family: var(--font-head); font-size: 0.72rem; letter-spacing: 3px;
-    padding: 10px 28px; border-radius: 4px; border: none; cursor: pointer;
-    background: linear-gradient(135deg, var(--neon2), var(--neon3));
-    color: #fff; text-transform: uppercase;
-    box-shadow: 0 0 20px rgba(0,180,255,0.4); transition: all .3s;
-  }
-  #startBtn:hover { box-shadow: 0 0 40px rgba(0,180,255,0.7); transform: scale(1.04); }
-
-  /* ===== FOOTER ===== */
-  footer {
-    padding: 40px 8vw; text-align: center;
-    border-top: 1px solid var(--border);
-    background: rgba(5,10,18,0.8);
-    font-size: 0.9rem; color: rgba(200,224,255,0.4);
-    letter-spacing: 2px;
-  }
-  footer span { color: var(--neon); }
-
-  /* ===== REVEAL ANIMATION ===== */
-  .reveal { opacity: 0; transform: translateY(40px); transition: opacity .7s ease, transform .7s ease; }
-  .reveal.visible { opacity: 1; transform: translateY(0); }
-
-  /* ===== RESPONSIVE ===== */
-  @media (max-width: 900px) {
-    #hero { flex-direction: column; padding-top: 120px; text-align: center; }
-    .hero-btns { justify-content: center; }
-    .about-grid { grid-template-columns: 1fr; }
-    .cards-grid { grid-template-columns: 1fr; }
-    .hero-skin { margin-top: -20px; }
-    .nav-links { display: none; flex-direction: column; position: fixed; top: 70px; right: 0; left: 0; background: rgba(5,10,18,0.97); padding: 30px 8vw; gap: 24px; border-bottom: 1px solid var(--border); }
-    .nav-links.open { display: flex; }
-    .nav-burger { display: flex; }
-  }
-  @media (max-width: 540px) {
-    .about-stats { grid-template-columns: 1fr 1fr; }
-    .game-wrap { margin: 30px -2vw 0; border-radius: 0; }
-    .skin-img { width: 170px; }
-    .skin-corner.tl, .skin-corner.bl { transform: translateX(-90px); }
-    .skin-corner.tr, .skin-corner.br { transform: translateX(90px); }
-  }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PaletteBlend — Creative Server Design & Community</title>
+    <meta name="description" content="PaletteBlend - Premium Discord server design, custom architecture, and creative community hub.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <div class="grain" aria-hidden="true"></div>
+    <div class="ambient" aria-hidden="true"></div>
 
-<!-- Loader -->
-<div id="loader">
-  <div class="loader-logo">VYXEL<span style="color:#fff">YT</span></div>
-  <div class="loader-bar-wrap"><div class="loader-bar"></div></div>
-</div>
+    <div id="root">
+        <div id="main-content">
 
-<!-- Scroll Progress -->
-<div id="scroll-bar"></div>
+            <!-- Header -->
+            <header class="site-header">
+                <div class="container header-inner">
+                    <a class="logo" href="#" id="logo">
+                        <img class="logo-img" src="assets/logo.png" alt="PaletteBlend" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                        <span class="logo-fallback" style="display:none;">PB</span>
+                        <span class="logo-wordmark">PaletteBlend</span>
+                    </a>
 
-<!-- Custom Cursor -->
-<div id="cursor"></div>
-<div id="cursor-trail"></div>
+                    <nav class="nav-tabs">
+                        <button class="tab-btn active" data-tab="home"><i class="fas fa-house"></i> Home</button>
+                        <button class="tab-btn" data-tab="portfolio"><i class="fas fa-swatchbook"></i> Work</button>
+                        <button class="tab-btn" data-tab="showcase"><i class="fas fa-cloud-arrow-up"></i> Showcase</button>
+                        <button class="tab-btn" data-tab="reviews"><i class="fas fa-message"></i> Reviews</button>
+                    </nav>
 
-<!-- Particles -->
-<canvas id="particles"></canvas>
+                    <a class="btn btn-accent header-discord" href="https://discord.gg/dfWsz2rrPP" target="_blank" rel="noopener noreferrer">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
+                        Discord
+                    </a>
 
-<!-- NAV -->
-<nav>
-  <div class="nav-logo">VYXEL<span style="color:#fff">YT</span></div>
-  <ul class="nav-links" id="navLinks">
-    <li><a href="#hero">Home</a></li>
-    <li><a href="#about">About</a></li>
-    <li><a href="#content">Content</a></li>
-    <li><a href="#community">Community</a></li>
-    <li><a href="#contact">Contact</a></li>
-    <li><a href="#game-section">Game</a></li>
-  </ul>
-  <div class="nav-burger" id="burger" onclick="toggleNav()">
-    <span></span><span></span><span></span>
-  </div>
-</nav>
+                    <button class="mobile-menu-btn" type="button" aria-label="Open menu" aria-expanded="false">
+                        <span></span><span></span><span></span>
+                    </button>
 
-<!-- ===== HERO ===== -->
-<section id="hero">
-  <div class="hero-text">
-    <div class="hero-eyebrow">⚡ Minecraft Creator &amp; PvP Player</div>
-    <div class="hero-name">VyxelYT</div>
-    <div class="hero-sub">Building Worlds. Creating Content.</div>
-    <div class="hero-btns">
-      <a href="#content" class="btn btn-primary">Explore</a>
-      <a href="#community" class="btn btn-outline">Join Community</a>
+                    <nav class="mobile-menu" aria-label="Mobile navigation">
+                        <div class="mobile-menu-inner">
+                            <button class="mobile-close" type="button" aria-label="Close menu">&times;</button>
+                            <div class="mobile-tabs">
+                                <button class="tab-btn mobile-tab-btn active" data-tab="home"><i class="fas fa-house"></i> Home</button>
+                                <button class="tab-btn mobile-tab-btn" data-tab="portfolio"><i class="fas fa-swatchbook"></i> Work</button>
+                                <button class="tab-btn mobile-tab-btn" data-tab="showcase"><i class="fas fa-cloud-arrow-up"></i> Showcase</button>
+                                <button class="tab-btn mobile-tab-btn" data-tab="reviews"><i class="fas fa-message"></i> Reviews</button>
+                            </div>
+                            <div class="mobile-discord">
+                                <a class="btn btn-accent" href="https://discord.gg/dfWsz2rrPP" target="_blank" rel="noopener noreferrer" style="width:100%;justify-content:center;">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
+                                    Join Discord
+                                </a>
+                            </div>
+                        </div>
+                    </nav>
+                </div>
+            </header>
+
+            <!-- HOME TAB -->
+            <div id="home-tab" class="tab-content active">
+                <section class="hero">
+                    <div class="hero-orb orb-a"></div>
+                    <div class="hero-orb orb-b"></div>
+                    <div class="container">
+                        <div class="hero-content reveal">
+                            <span class="hero-badge">
+                                <span class="badge-dot"></span>
+                                Now Accepting Commissions
+                            </span>
+                            <h1>Design that<br><span class="gradient-text">speaks louder.</span></h1>
+                            <p class="hero-desc">Premium Discord server architecture, custom bot integration, and visual identities that transform communities into destinations.</p>
+                            <div class="hero-btns">
+                                <a class="btn btn-accent btn-lg" href="https://discord.gg/dfWsz2rrPP" target="_blank" rel="noopener noreferrer">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
+                                    Join the Discord
+                                </a>
+                                <button class="btn btn-outline btn-lg" id="copyDiscord" type="button">
+                                    <i class="fas fa-copy"></i> Copy Invite
+                                </button>
+                            </div>
+                        </div>
+                        <div class="stats-strip reveal">
+                            <div class="stat-chip">
+                                <span class="stat-val">50+</span>
+                                <span class="stat-lbl">Projects</span>
+                            </div>
+                            <div class="stat-div"></div>
+                            <div class="stat-chip">
+                                <span class="stat-val">100%</span>
+                                <span class="stat-lbl">Satisfaction</span>
+                            </div>
+                            <div class="stat-div"></div>
+                            <div class="stat-chip">
+                                <span class="stat-val">24/7</span>
+                                <span class="stat-lbl">Support</span>
+                            </div>
+                            <div class="stat-div"></div>
+                            <div class="stat-chip">
+                                <span class="stat-val">EN</span>
+                                <span class="stat-lbl">Community</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- About -->
+                <section class="section about-section">
+                    <div class="container">
+                        <div class="about-grid">
+                            <div class="about-visual reveal">
+                                <div class="skin-frame">
+                                    <img src="assets/skin.png" alt="PaletteBlend Creator" class="skin-img" onerror="this.src='https://images.pexels.com/photos/1370296/pexels-photo-1370296.jpeg?auto=compress&cs=tinysrgb&w=300'">
+                                </div>
+                                <div class="skin-label">Server Architect</div>
+                            </div>
+                            <div class="about-text reveal reveal-delay">
+                                <span class="eyebrow">About Me</span>
+                                <h2>Crafting digital<br>experiences that <em>last</em></h2>
+                                <p>Welcome to my creative hub! I specialize in custom server architecture and premium design work for Discord communities. Every project is a unique canvas where functionality meets aesthetic excellence.</p>
+                                <p>My expertise spans server optimization, custom bot integration, role hierarchy design, channel architecture, and creating cohesive visual identities — whether you're launching a gaming community, professional network, or creative collective.</p>
+                                <div class="skill-chips">
+                                    <span class="chip">Server Architecture</span>
+                                    <span class="chip">Bot Integration</span>
+                                    <span class="chip">Role Design</span>
+                                    <span class="chip">Visual Identity</span>
+                                    <span class="chip">Channel Flow</span>
+                                    <span class="chip">Brand Systems</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- CTA -->
+                <section class="section">
+                    <div class="container">
+                        <div class="cta-block reveal">
+                            <div class="cta-glow"></div>
+                            <span class="eyebrow">Ready to start?</span>
+                            <h2>Let's build something extraordinary.</h2>
+                            <p>Share your vision on Discord and watch it come to life.</p>
+                            <div class="cta-btns">
+                                <a class="btn btn-accent btn-lg" href="https://discord.gg/dfWsz2rrPP" target="_blank" rel="noopener noreferrer">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
+                                    Open Discord
+                                </a>
+                                <button class="btn btn-outline btn-lg" id="copyDiscord2" type="button">
+                                    <i class="fas fa-copy"></i> Copy Invite
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- PORTFOLIO TAB -->
+            <div id="portfolio-tab" class="tab-content">
+                <section class="section">
+                    <div class="container">
+                        <div class="section-header">
+                            <span class="eyebrow">Portfolio</span>
+                            <h2>Selected Work</h2>
+                        </div>
+                        <div class="portfolio-grid" id="portfolioGrid"></div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- SHOWCASE TAB -->
+            <div id="showcase-tab" class="tab-content">
+                <section class="section">
+                    <div class="container">
+                        <div class="section-header">
+                            <span class="eyebrow">Community</span>
+                            <h2>Project Showcase</h2>
+                        </div>
+
+                        <div class="upload-card reveal">
+                            <p class="upload-card-title"><i class="fas fa-cloud-arrow-up"></i> Share Your Creation</p>
+                            <form id="uploadForm" class="upload-form">
+                                <div class="drop-zone" id="dropZone">
+                                    <input type="file" id="imageInput" accept="image/*" class="file-input-hidden" required>
+                                    <div class="drop-placeholder" id="dropPlaceholder">
+                                        <i class="fas fa-image drop-icon"></i>
+                                        <span id="fileLabel">Click or drag an image here</span>
+                                    </div>
+                                    <div class="img-preview-wrap" id="imgPreviewWrap" style="display:none;">
+                                        <img id="imgPreview" src="" alt="Preview">
+                                        <button type="button" class="remove-preview" id="removePreview">&times;</button>
+                                    </div>
+                                </div>
+                                <div class="upload-fields">
+                                    <textarea id="messageInput" class="field-input" maxlength="150" placeholder="Tell us about your project..." required rows="3"></textarea>
+                                    <span class="char-counter"><span id="charCount">0</span>/150</span>
+                                </div>
+                                <button type="submit" class="btn btn-accent" id="submitBtn">
+                                    <i class="fas fa-paper-plane"></i> Share Project
+                                </button>
+                            </form>
+                        </div>
+
+                        <div class="showcase-grid" id="showcaseGrid"></div>
+                        <div class="loading-wrap" id="loadingState" style="display:none;">
+                            <div class="spinner"></div><p>Loading...</p>
+                        </div>
+                        <div class="empty-wrap" id="emptyState" style="display:none;">
+                            <i class="fas fa-images" style="font-size:40px;color:var(--muted);margin-bottom:14px;"></i>
+                            <h3>No projects yet</h3>
+                            <p>Be the first to share your work!</p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- REVIEWS TAB -->
+            <div id="reviews-tab" class="tab-content">
+                <section class="section">
+                    <div class="container">
+                        <div class="section-header">
+                            <span class="eyebrow">Testimonials</span>
+                            <h2>What Clients Say</h2>
+                        </div>
+
+                        <div class="review-panel reveal">
+                            <form id="review-form" class="review-form">
+                                <div class="review-form-row">
+                                    <input type="text" id="review-name" placeholder="Your name" class="field-input flex-input">
+                                    <div class="star-row" id="starRating">
+                                        <button type="button" class="star sel" data-value="1">★</button>
+                                        <button type="button" class="star sel" data-value="2">★</button>
+                                        <button type="button" class="star sel" data-value="3">★</button>
+                                        <button type="button" class="star sel" data-value="4">★</button>
+                                        <button type="button" class="star sel" data-value="5">★</button>
+                                    </div>
+                                </div>
+                                <textarea id="review-text" rows="4" placeholder="Share your experience with PaletteBlend..." class="field-input"></textarea>
+                                <button class="btn btn-accent" type="submit">
+                                    <i class="fas fa-paper-plane"></i> Submit Review
+                                </button>
+                            </form>
+                            <div class="review-err" id="reviewErr"></div>
+                            <div id="reviews-list" class="reviews-list"></div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+        </div>
+
+        <!-- Footer -->
+        <footer class="site-footer">
+            <div class="container footer-inner">
+                <div class="footer-brand">
+                    <div class="footer-logo">
+                        <span class="logo-fallback" style="width:22px;height:22px;font-size:9px;border-radius:6px;">PB</span>
+                        <span>PaletteBlend</span>
+                    </div>
+                    <p class="footer-desc">Premium Discord server design and creative community hub. Transform your community.</p>
+                    <div class="footer-socials">
+                        <a href="https://discord.gg/dfWsz2rrPP" target="_blank" rel="noopener noreferrer" class="social-icon" aria-label="Discord">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
+                        </a>
+                    </div>
+                </div>
+                <div class="footer-links-grid">
+                    <div class="footer-col">
+                        <h5>Pages</h5>
+                        <a href="#" data-tab-link="home">Home</a>
+                        <a href="#" data-tab-link="portfolio">Work</a>
+                        <a href="#" data-tab-link="showcase">Showcase</a>
+                        <a href="#" data-tab-link="reviews">Reviews</a>
+                    </div>
+                    <div class="footer-col">
+                        <h5>Community</h5>
+                        <a href="https://discord.gg/dfWsz2rrPP" target="_blank" rel="noopener noreferrer">Discord</a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <span>&copy; <span id="year"></span> PaletteBlend. All rights reserved.</span>
+            </div>
+        </footer>
     </div>
-  </div>
-  <div class="hero-skin">
-    <div class="skin-glow-ring"></div>
-    <div class="skin-orb"></div>
-    <img src="https://www.image2url.com/r2/default/images/1777907295769-1744ce48-ac85-46db-b7e5-fe3a19446500.png" alt="VyxelYT Minecraft Skin" class="skin-img" />
-    <div class="skin-scanline"></div>
-    <div class="skin-corner tl"></div>
-    <div class="skin-corner tr"></div>
-    <div class="skin-corner bl"></div>
-    <div class="skin-corner br"></div>
-  </div>
-</section>
 
-<div class="divider"></div>
-
-<!-- ===== ABOUT ===== -->
-<section id="about">
-  <div class="section-tag reveal">// About Me</div>
-  <h2 class="section-title reveal">The Vision Behind <span>VyxelYT</span></h2>
-  <div class="about-grid">
-    <div class="about-text reveal">
-      <p>I'm <strong>VyxelYT</strong> — a passionate Minecraft content creator dedicated to bringing high-quality gameplay, builds, and PvP mastery to the community.</p>
-      <p>My content blends <strong>creative storytelling</strong> with intense PvP action and massive world-building projects. Every video is crafted to inspire, entertain, and push the limits of what's possible in Minecraft.</p>
-      <p>Beyond gaming, I build <strong>digital projects</strong> and explore the creative side of technology — always learning, always creating.</p>
+    <!-- Admin Modal -->
+    <div class="modal-overlay" id="adminModal">
+        <div class="modal-box">
+            <h3>Admin Access</h3>
+            <p>Enter admin password to continue.</p>
+            <input type="password" id="adminPassword" class="field-input" placeholder="Password...">
+            <div class="modal-btns">
+                <button class="btn" id="cancelAdmin">Cancel</button>
+                <button class="btn btn-accent" id="confirmAdmin">Confirm</button>
+            </div>
+        </div>
     </div>
-    <div class="about-stats reveal">
-      <div class="stat-card">
-        <div class="stat-num">200+</div>
-        <div class="stat-label">Videos Created</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-num">5K+</div>
-        <div class="stat-label">Community Members</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-num">3yrs</div>
-        <div class="stat-label">Creating Content</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-num">∞</div>
-        <div class="stat-label">Blocks Placed</div>
-      </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"><span id="toastMsg"></span></div>
+
+    <!-- Lightbox -->
+    <div class="lightbox" id="lightbox">
+        <div class="lightbox-inner">
+            <img src="" alt="Preview" id="lightboxImg">
+            <button class="lightbox-close" id="lightboxClose">&times;</button>
+        </div>
     </div>
-  </div>
-</section>
 
-<div class="divider"></div>
-
-<!-- ===== CONTENT ===== -->
-<section id="content">
-  <div class="section-tag reveal">// Projects</div>
-  <h2 class="section-title reveal">What I <span>Create</span></h2>
-  <div class="cards-grid">
-    <div class="content-card reveal">
-      <div class="card-icon">⚔️</div>
-      <div class="card-title">PvP Gameplay</div>
-      <div class="card-desc">High-skill competitive Minecraft PvP — combo chains, clutch plays, and tournament highlights. Pure skill, zero luck.</div>
-      <span class="card-tag">Combat</span>
-    </div>
-    <div class="content-card reveal">
-      <div class="card-icon">🌐</div>
-      <div class="card-title">Web Projects</div>
-      <div class="card-desc">Custom websites, tools, and digital experiences built for the Minecraft community and beyond. Code meets creativity.</div>
-      <span class="card-tag">Dev</span>
-    </div>
-    <div class="content-card reveal">
-      <div class="card-icon">🏛️</div>
-      <div class="card-title">Minecraft Builds</div>
-      <div class="card-desc">Massive architectural masterpieces — from medieval kingdoms to futuristic cities. Every block tells a story.</div>
-      <span class="card-tag">Creative</span>
-    </div>
-  </div>
-</section>
-
-<div class="divider"></div>
-
-<!-- ===== COMMUNITY ===== -->
-<section id="community">
-  <div class="section-tag reveal">// Connect</div>
-  <h2 class="section-title reveal">Join the <span>Community</span></h2>
-  <p class="comm-desc reveal">Be part of a growing family of Minecraft players and creators. Stay updated, join events, and be part of something legendary.</p>
-  <div class="community-grid reveal">
-    <a href="https://discord.gg/NXutfceDV2" class="comm-btn discord" target="_blank" rel="noopener noreferrer">
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
-      Discord
-    </a>
-    <a href="https://www.youtube.com/@Vyxel_YT" class="comm-btn youtube" target="_blank" rel="noopener noreferrer">
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.495 6.205a3.007 3.007 0 0 0-2.088-2.088c-1.87-.501-9.396-.501-9.396-.501s-7.507-.01-9.396.501A3.007 3.007 0 0 0 .527 6.205a31.247 31.247 0 0 0-.522 5.805 31.247 31.247 0 0 0 .522 5.783 3.007 3.007 0 0 0 2.088 2.088c1.868.502 9.396.502 9.396.502s7.506 0 9.396-.502a3.007 3.007 0 0 0 2.088-2.088 31.247 31.247 0 0 0 .5-5.783 31.247 31.247 0 0 0-.5-5.805zM9.609 15.601V8.408l6.264 3.602z"/></svg>
-      YouTube
-    </a>
-    <a href="#" class="comm-btn twitter">
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-      Twitter / X
-    </a>
-  </div>
-</section>
-
-<div class="divider"></div>
-
-<!-- ===== CONTACT ===== -->
-<section id="contact">
-  <div class="section-tag reveal">// Contact</div>
-  <h2 class="section-title reveal">Get in <span>Touch</span></h2>
-  <div class="contact-wrap reveal">
-    <form id="contactForm">
-      <div class="form-row">
-        <label for="cName">Your Name</label>
-        <input type="text" id="cName" name="name" placeholder="Enter your name" required />
-      </div>
-      <div class="form-row">
-        <label for="cEmail">Your Email</label>
-        <input type="email" id="cEmail" name="email" placeholder="Enter your email" required />
-      </div>
-      <div class="form-row">
-        <label for="cMsg">Message</label>
-        <textarea id="cMsg" name="message" placeholder="Write your message here..." required></textarea>
-      </div>
-      <button type="submit" class="btn btn-primary" style="width:100%">Send Message</button>
-      <div class="form-status" id="formStatus"></div>
-    </form>
-  </div>
-</section>
-
-<div class="divider"></div>
-
-<!-- ===== MINI GAME ===== -->
-<section id="game-section">
-  <div class="section-tag reveal">// Mini Game</div>
-  <h2 class="section-title reveal">Block <span>Dodge</span></h2>
-  <p class="reveal" style="font-size:1.05rem;color:var(--text);margin-bottom:4px;">Dodge the falling blocks! How long can you survive?</p>
-  <div class="game-wrap reveal">
-    <div class="game-header">
-      <div class="game-title-sm">BLOCK DODGE</div>
-      <div class="game-score">SCORE: <span id="scoreDisplay">0</span> &nbsp;|&nbsp; BEST: <span id="bestDisplay">0</span></div>
-    </div>
-    <canvas id="gameCanvas" width="700" height="320"></canvas>
-    <div class="game-controls">
-      <span class="game-instruction">← → Arrow Keys or A/D to move</span>
-      <button id="startBtn">START GAME</button>
-    </div>
-  </div>
-</section>
-
-<!-- ===== FOOTER ===== -->
-<footer>
-  <p>© 2025 <span>VyxelYT</span> · Built with passion for the community · All rights reserved</p>
-</footer>
-
-<script>
-/* ========================================
-   LOADER
-======================================== */
-window.addEventListener('load', () => {
-  setTimeout(() => { document.getElementById('loader').classList.add('hide'); }, 2000);
-});
-
-/* ========================================
-   CURSOR
-======================================== */
-const cur = document.getElementById('cursor');
-const trail = document.getElementById('cursor-trail');
-let mx = 0, my = 0;
-document.addEventListener('mousemove', e => {
-  mx = e.clientX; my = e.clientY;
-  cur.style.left = mx + 'px'; cur.style.top = my + 'px';
-  setTimeout(() => { trail.style.left = mx + 'px'; trail.style.top = my + 'px'; }, 80);
-});
-document.querySelectorAll('a,button,.content-card,.stat-card').forEach(el => {
-  el.addEventListener('mouseenter', () => { cur.style.width = '28px'; cur.style.height = '28px'; });
-  el.addEventListener('mouseleave', () => { cur.style.width = '18px'; cur.style.height = '18px'; });
-});
-
-/* ========================================
-   SCROLL PROGRESS
-======================================== */
-window.addEventListener('scroll', () => {
-  const p = window.scrollY / (document.body.scrollHeight - window.innerHeight) * 100;
-  document.getElementById('scroll-bar').style.width = p + '%';
-});
-
-/* ========================================
-   REVEAL ON SCROLL
-======================================== */
-const reveals = document.querySelectorAll('.reveal');
-const obs = new IntersectionObserver((entries) => {
-  entries.forEach((e, i) => {
-    if (e.isIntersecting) {
-      e.target.style.transitionDelay = (i * 0.07) + 's';
-      e.target.classList.add('visible');
-    }
-  });
-}, { threshold: 0.12 });
-reveals.forEach(r => obs.observe(r));
-
-/* ========================================
-   NAV BURGER
-======================================== */
-function toggleNav() {
-  document.getElementById('navLinks').classList.toggle('open');
-}
-
-/* ========================================
-   PARTICLES
-======================================== */
-(function() {
-  const canvas = document.getElementById('particles');
-  const ctx = canvas.getContext('2d');
-  let W, H, particles = [];
-  function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
-  resize(); window.addEventListener('resize', resize);
-  function mkParticle() {
-    return {
-      x: Math.random() * W, y: Math.random() * H,
-      r: Math.random() * 1.4 + 0.3,
-      dx: (Math.random() - 0.5) * 0.3,
-      dy: (Math.random() - 0.5) * 0.3,
-      alpha: Math.random() * 0.6 + 0.1,
-      pulse: Math.random() * Math.PI * 2
-    };
-  }
-  for (let i = 0; i < 90; i++) particles.push(mkParticle());
-  function draw() {
-    ctx.clearRect(0, 0, W, H);
-    const now = Date.now() / 1000;
-    particles.forEach(p => {
-      p.x += p.dx; p.y += p.dy; p.pulse += 0.02;
-      if (p.x < 0) p.x = W; if (p.x > W) p.x = 0;
-      if (p.y < 0) p.y = H; if (p.y > H) p.y = 0;
-      const a = p.alpha * (0.7 + 0.3 * Math.sin(p.pulse));
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(0,180,255,${a})`;
-      ctx.fill();
-    });
-    // Draw faint connecting lines
-    for (let i = 0; i < particles.length; i++) {
-      for (let j = i + 1; j < particles.length; j++) {
-        const dx = particles[i].x - particles[j].x;
-        const dy = particles[i].y - particles[j].y;
-        const dist = Math.sqrt(dx*dx + dy*dy);
-        if (dist < 100) {
-          ctx.beginPath();
-          ctx.moveTo(particles[i].x, particles[i].y);
-          ctx.lineTo(particles[j].x, particles[j].y);
-          ctx.strokeStyle = `rgba(0,100,255,${0.08 * (1 - dist/100)})`;
-          ctx.lineWidth = 0.5;
-          ctx.stroke();
-        }
-      }
-    }
-    requestAnimationFrame(draw);
-  }
-  draw();
-})();
-
-/* ========================================
-   CONTACT FORM (Formspree)
-======================================== */
-document.getElementById('contactForm').addEventListener('submit', async function(e) {
-  e.preventDefault();
-  const status = document.getElementById('formStatus');
-  const btn = this.querySelector('button[type=submit]');
-  btn.textContent = 'Sending...'; btn.disabled = true;
-  status.textContent = ''; status.className = 'form-status';
-  const data = {
-    name: document.getElementById('cName').value,
-    email: document.getElementById('cEmail').value,
-    message: document.getElementById('cMsg').value
-  };
-  try {
-    const res = await fetch('https://formspree.io/f/xpwrjkqb', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    if (res.ok) {
-      status.textContent = '✓ Message sent! I\'ll get back to you soon.';
-      status.className = 'form-status ok';
-      this.reset();
-    } else {
-      throw new Error('Server error');
-    }
-  } catch {
-    // Fallback: open mailto
-    const subject = encodeURIComponent('Message from ' + data.name);
-    const body = encodeURIComponent('Name: ' + data.name + '\nEmail: ' + data.email + '\n\n' + data.message);
-    window.open('mailto:aiyashraidh@gmail.com?subject=' + subject + '&body=' + body);
-    status.textContent = '✓ Opening your email client...';
-    status.className = 'form-status ok';
-  }
-  btn.textContent = 'Send Message'; btn.disabled = false;
-});
-
-/* ========================================
-   MINI GAME — BLOCK DODGE
-======================================== */
-(function() {
-  const canvas = document.getElementById('gameCanvas');
-  const ctx = canvas.getContext('2d');
-  const W = 700, H = 320;
-  let score = 0, best = 0, lives = 3, gameRunning = false;
-  let blocks = [], particles = [];
-  let playerX = W / 2, playerY = H - 50;
-  const PW = 32, PH = 32, BW = 28, BH = 28;
-  let keys = {};
-  let blockSpeed = 2.5, spawnRate = 60, frameCount = 0;
-  let flashAlpha = 0;
-
-  document.addEventListener('keydown', e => { keys[e.key] = true; });
-  document.addEventListener('keyup', e => { keys[e.key] = false; });
-
-  // Touch support
-  let touchStartX = 0;
-  canvas.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; });
-  canvas.addEventListener('touchmove', e => {
-    e.preventDefault();
-    const dx = e.touches[0].clientX - touchStartX;
-    playerX = Math.max(PW/2, Math.min(W - PW/2, playerX + dx * 0.8));
-    touchStartX = e.touches[0].clientX;
-  }, { passive: false });
-
-  function spawnBlock() {
-    blocks.push({
-      x: Math.random() * (W - BW * 2) + BW,
-      y: -BH,
-      color: ['#0066ff','#00b4ff','#00eaff','#ff4444','#ff9900'][Math.floor(Math.random()*5)],
-      speed: blockSpeed + Math.random() * 1.5
-    });
-  }
-
-  function spawnParticles(x, y, color) {
-    for (let i = 0; i < 12; i++) {
-      particles.push({
-        x, y,
-        dx: (Math.random() - 0.5) * 5,
-        dy: (Math.random() - 0.5) * 5 - 2,
-        alpha: 1, color,
-        r: Math.random() * 4 + 2,
-        life: 1
-      });
-    }
-  }
-
-  function drawPixelChar(cx, cy) {
-    // Body
-    ctx.fillStyle = '#0066ff';
-    ctx.fillRect(cx - 10, cy - 16, 20, 20);
-    // Head
-    ctx.fillStyle = '#f5d0a0';
-    ctx.fillRect(cx - 7, cy - 26, 14, 12);
-    // Hair
-    ctx.fillStyle = '#5c3d1e';
-    ctx.fillRect(cx - 8, cy - 28, 16, 6);
-    // Eyes
-    ctx.fillStyle = '#00b4ff';
-    ctx.fillRect(cx - 5, cy - 22, 3, 3);
-    ctx.fillRect(cx + 2, cy - 22, 3, 3);
-    // Legs
-    ctx.fillStyle = '#1a1a2e';
-    ctx.fillRect(cx - 9, cy + 4, 8, 10);
-    ctx.fillRect(cx + 1, cy + 4, 8, 10);
-    // Shoes
-    ctx.fillStyle = '#0066ff';
-    ctx.fillRect(cx - 10, cy + 12, 9, 4);
-    ctx.fillRect(cx + 1, cy + 12, 9, 4);
-  }
-
-  function drawBlock(b) {
-    // Pixel-style block
-    ctx.fillStyle = b.color;
-    ctx.fillRect(b.x - BW/2, b.y, BW, BH);
-    ctx.fillStyle = 'rgba(255,255,255,0.15)';
-    ctx.fillRect(b.x - BW/2, b.y, BW, 4);
-    ctx.fillRect(b.x - BW/2, b.y, 4, BH);
-    ctx.fillStyle = 'rgba(0,0,0,0.25)';
-    ctx.fillRect(b.x - BW/2, b.y + BH - 4, BW, 4);
-    ctx.fillRect(b.x + BW/2 - 4, b.y, 4, BH);
-    // Glow
-    ctx.shadowColor = b.color;
-    ctx.shadowBlur = 10;
-    ctx.strokeStyle = b.color;
-    ctx.lineWidth = 1;
-    ctx.strokeRect(b.x - BW/2, b.y, BW, BH);
-    ctx.shadowBlur = 0;
-  }
-
-  function drawHUD() {
-    // Score
-    ctx.font = 'bold 14px Orbitron, monospace';
-    ctx.fillStyle = '#00b4ff';
-    ctx.fillText('SCORE: ' + score, 14, 24);
-    // Lives
-    for (let i = 0; i < 3; i++) {
-      ctx.fillStyle = i < lives ? '#ff4444' : '#333';
-      ctx.fillRect(W - 90 + i * 26, 10, 18, 18);
-      ctx.fillStyle = i < lives ? '#ff8888' : '#555';
-      ctx.fillRect(W - 90 + i * 26, 10, 18, 4);
-    }
-    // Speed indicator
-    ctx.font = '10px Orbitron, monospace';
-    ctx.fillStyle = 'rgba(0,180,255,0.5)';
-    ctx.fillText('LVL ' + Math.floor(score/10 + 1), 14, H - 10);
-  }
-
-  function update() {
-    if (!gameRunning) return;
-    frameCount++;
-
-    // Move player
-    const spd = 5;
-    if ((keys['ArrowLeft'] || keys['a'] || keys['A']) && playerX > PW/2) playerX -= spd;
-    if ((keys['ArrowRight'] || keys['d'] || keys['D']) && playerX < W - PW/2) playerX += spd;
-
-    // Spawn
-    const curSpawnRate = Math.max(20, spawnRate - Math.floor(score / 5));
-    if (frameCount % curSpawnRate === 0) spawnBlock();
-
-    // Increase difficulty
-    blockSpeed = 2.5 + score * 0.08;
-
-    // Update blocks
-    for (let i = blocks.length - 1; i >= 0; i--) {
-      blocks[i].y += blocks[i].speed;
-      // Collision
-      const b = blocks[i];
-      if (
-        Math.abs(b.x - playerX) < (BW/2 + PW/2 - 6) &&
-        b.y + BH > playerY - PH/2 && b.y < playerY + PH/2
-      ) {
-        spawnParticles(playerX, playerY, '#ff4444');
-        lives--;
-        flashAlpha = 0.5;
-        blocks.splice(i, 1);
-        if (lives <= 0) { endGame(); return; }
-        continue;
-      }
-      // Passed safely
-      if (b.y > H) {
-        blocks.splice(i, 1);
-        score++;
-        document.getElementById('scoreDisplay').textContent = score;
-        if (score > best) { best = score; document.getElementById('bestDisplay').textContent = best; }
-      }
-    }
-
-    // Update particles
-    for (let i = particles.length - 1; i >= 0; i--) {
-      const p = particles[i];
-      p.x += p.dx; p.y += p.dy; p.dy += 0.15; p.life -= 0.04; p.alpha = p.life;
-      if (p.life <= 0) particles.splice(i, 1);
-    }
-    if (flashAlpha > 0) flashAlpha -= 0.04;
-  }
-
-  function render() {
-    // Background
-    ctx.clearRect(0, 0, W, H);
-    ctx.fillStyle = '#04080f';
-    ctx.fillRect(0, 0, W, H);
-
-    // Grid lines
-    ctx.strokeStyle = 'rgba(0,100,255,0.07)';
-    ctx.lineWidth = 1;
-    for (let x = 0; x < W; x += 40) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
-    for (let y = 0; y < H; y += 40) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
-
-    // Ground
-    ctx.fillStyle = 'rgba(0,180,255,0.08)';
-    ctx.fillRect(0, H - 6, W, 6);
-    ctx.fillStyle = 'rgba(0,180,255,0.4)';
-    ctx.fillRect(0, H - 6, W, 2);
-
-    // Particles
-    particles.forEach(p => {
-      ctx.save(); ctx.globalAlpha = p.alpha;
-      ctx.fillStyle = p.color;
-      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill();
-      ctx.restore();
-    });
-
-    // Blocks
-    blocks.forEach(b => drawBlock(b));
-
-    // Player
-    drawPixelChar(playerX, playerY);
-    // Player glow
-    ctx.save();
-    ctx.shadowColor = '#00b4ff'; ctx.shadowBlur = 20;
-    ctx.fillStyle = 'rgba(0,180,255,0.15)';
-    ctx.fillRect(playerX - PW/2, playerY - PH/2, PW, PH);
-    ctx.restore();
-
-    // Flash on hit
-    if (flashAlpha > 0) {
-      ctx.save(); ctx.globalAlpha = flashAlpha;
-      ctx.fillStyle = '#ff0000'; ctx.fillRect(0,0,W,H);
-      ctx.restore();
-    }
-
-    drawHUD();
-
-    if (!gameRunning) {
-      // Overlay
-      ctx.fillStyle = 'rgba(4,8,20,0.75)';
-      ctx.fillRect(0, 0, W, H);
-      ctx.font = 'bold 28px Orbitron, monospace';
-      ctx.fillStyle = '#00b4ff';
-      ctx.textAlign = 'center';
-      ctx.shadowColor = '#00b4ff'; ctx.shadowBlur = 30;
-      if (score === 0) {
-        ctx.fillText('BLOCK DODGE', W/2, H/2 - 24);
-        ctx.font = '14px Rajdhani, sans-serif';
-        ctx.fillStyle = 'rgba(200,224,255,0.7)';
-        ctx.shadowBlur = 0;
-        ctx.fillText('Press START to play!', W/2, H/2 + 14);
-      } else {
-        ctx.fillText('GAME OVER', W/2, H/2 - 30);
-        ctx.font = '16px Orbitron, monospace';
-        ctx.fillStyle = '#fff'; ctx.shadowBlur = 0;
-        ctx.fillText('Score: ' + score + '  |  Best: ' + best, W/2, H/2 + 14);
-      }
-      ctx.textAlign = 'left';
-    }
-  }
-
-  function loop() {
-    update(); render();
-    requestAnimationFrame(loop);
-  }
-  loop();
-
-  function startGame() {
-    blocks = []; particles = []; score = 0; lives = 3;
-    playerX = W / 2; frameCount = 0; blockSpeed = 2.5; flashAlpha = 0;
-    gameRunning = true;
-    document.getElementById('scoreDisplay').textContent = '0';
-    document.getElementById('startBtn').textContent = 'RESTART';
-  }
-
-  function endGame() {
-    gameRunning = false;
-    if (score > best) best = score;
-    document.getElementById('bestDisplay').textContent = best;
-  }
-
-  document.getElementById('startBtn').addEventListener('click', startGame);
-})();
-</script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
